@@ -144,7 +144,7 @@ fixThisLineWithMultipleMeasurements  <-function(data,index)
   
 }  
 
-filterThisFile <- function(inFileName, firstFrame, lastFrame,max_Accpetable=2)
+filterSticklebackTrackFile <- function(inFileName, firstFrame, lastFrame,max_Accpetable=2)
 {
   if (!file.exists(inFileName))
   {
@@ -200,8 +200,11 @@ filterThisFile <- function(inFileName, firstFrame, lastFrame,max_Accpetable=2)
   
 }
 
+####################################
+#smooth an already filtered file - this means only frames with one measurements are here and two/more measurements frames are fixed
 
-smoothThisFile <-function (inFileName)
+###################################
+smoothSticklebackTrackFile <-function (inFileName, firstFrame, lastFrame)
 {
   
   outFileName=paste(substr(inFileName,1,nchar(inFileName)-4),"_smoothed.txt",sep="");
@@ -228,7 +231,10 @@ smoothThisFile <-function (inFileName)
   prev_fn = origTrackFile$fn[1];
   smoothedData = c();
   smoothedData = rbind(smoothedData,c(prev_fn,prev_pos));
-  
+  preAllocatedSmoothData = matrix(data=NA,nrow=10000,ncol=5)
+  preallocateCounter = 1;
+  preAllocatedSmoothData[1,] = c(prev_fn,prev_pos);
+  preallocateCounter = preallocateCounter + 1;
   for (ff in 2:(totalNumOfEntries-1)) 
   {
     #    curr_pos = c(origTrackFile$x[ff],origTrackFile$y[ff],origTrackFile$z[ff]);
@@ -244,22 +250,35 @@ smoothThisFile <-function (inFileName)
       yy   = round(seq(prev_pos[4],curr_pos[4], length.out = curr_fn - prev_fn -1),digits=2);
       fnfn = (prev_fn+1):(curr_fn-1);
       tmp = cbind(fnfn,xdxd,ydyd,xx,yy);
-      #      print("dim tmp = ")
-      #      print(dim(tmp))
-      #      print("dim smoothed data = ")
-      #      print(dim(smoothedData))
-      smoothedData = rbind(smoothedData,tmp);
-      smoothedData = rbind(smoothedData,c(curr_fn,curr_pos));
-      #      print(prev_fn);
+
+      
+#       smoothedData = rbind(smoothedData,tmp);
+#       smoothedData = rbind(smoothedData,c(curr_fn,curr_pos));
+      
+      preAllocatedSmoothData[preallocateCounter:(preallocateCounter+length(fnfn)-1),] = tmp;
+      preallocateCounter = preallocateCounter +length(fnfn);
+      preAllocatedSmoothData[preallocateCounter,] = c(curr_fn,curr_pos);
+      preallocateCounter = preallocateCounter + 1;
+      
+
       
     } else {
       
-      smoothedData = rbind(smoothedData,c(curr_fn,curr_pos));
+#      smoothedData = rbind(smoothedData,c(curr_fn,curr_pos));
+      preAllocatedSmoothData[preallocateCounter,] = c(curr_fn,curr_pos);
+      preallocateCounter = preallocateCounter + 1;
+      
     }
     
     prev_pos = curr_pos;      
     prev_fn = curr_fn;
   }
+  # make sure to get rid of the frames that are out of (firstFrame, lastFrame)
+  smoothedData = preAllocatedSmoothData[-which(is.na(preAllocatedSmoothData[,1]))];
+  
+  allFrameNums = smoothedData[,1];
+  toRemoveIndeces = c(which(allFrameNums<firstFrame), which(allFrameNums>lastFrame));
+  smoothedData = smoothedData[-toRemoveIndeces,];
   
   write.table(smoothedData,file = outFileName,sep = ",", row.names = FALSE, col.names = FALSE);
   
