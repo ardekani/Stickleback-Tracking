@@ -10,7 +10,8 @@ tsoutliers <- function(x,plot=FALSE)
     tt <- 1:length(x)
     resid <- residuals(loess(x ~ tt))
   }
-  resid.q <- quantile(resid,prob=c(0.25,0.75))
+
+  resid.q <- quantile(resid,prob=c(0.25,0.75),na.rm = TRUE)
   iqr <- diff(resid.q)
   limits <- resid.q + 1.5*iqr*c(-1,1)
   score <- abs(pmin((resid-limits[1])/iqr,0) + pmax((resid - limits[2])/iqr,0))
@@ -66,12 +67,30 @@ isThisLineOutlier <-function(data,index)
   
   
   #After making the current frame to only 1 measurement, we want to see if the measurement is an outlier or not
+
   
   currentFrameIndex = which(searchWindow[,1]==currentFrameNum);
+  
+#   print("currentFrameIndex");
+#   print(currentFrameIndex);
+#   print("searchWindow")
+#   print(searchWindow)
+  if(length(searchWindow[,5])<3)
+  {
+    return(TRUE)
+    
+  }
   scoreX = tsoutliers(searchWindow[,5]);
   scoreY = tsoutliers(searchWindow[,6]);
   score = scoreX + scoreY;
+  ss = sum(is.na(score));
+
+  if(ss>0) #THE SCORE VALUE FOR SMALL SIZE SEARCH WINDOW BECOMES NA OR INF
+  {
+    return(TRUE)
+  }
   
+
   if(score[currentFrameIndex]!=0)
   {
     return(TRUE);
@@ -171,13 +190,13 @@ filterSticklebackTrackFile <- function(inFileName, firstFrame, lastFrame,max_Acc
     {
       for (i in 1:length(morethanOneDetectedIndex))
       {
-        ptm = proc.time();
+        #ptm = proc.time();
         index = morethanOneDetectedIndex[i];
         fixedLine = fixThisLineWithMultipleMeasurements(filteredTrackData,index);
         filteredTrackData[index,] = fixedLine;
-        pttm = proc.time()-ptm;
-        print(pttm);
-        print(i)
+        #pttm = proc.time()-ptm;
+        #print(pttm);
+        #print(i)
       }
     }
 
@@ -185,7 +204,7 @@ filterSticklebackTrackFile <- function(inFileName, firstFrame, lastFrame,max_Acc
     
     
   }
-  print("loops are done")
+
   # now remove the frames that are not fixable (after two rounds)
 
   
@@ -215,9 +234,13 @@ smoothSticklebackTrackFile <-function (inFileName, firstFrame, lastFrame)
   
   #first remove the outliers
   isOutlier = c();
+  print("finding outliers ....")
   for( i in 1:max(dim(origTrackFile)))
   {
     tmp = isThisLineOutlier(origTrackFile,i);
+    #print("-----------------ii = ----------------")
+    #print(i)
+    #print("---------------------------------------")
     isOutlier = c(isOutlier,tmp);  
   }
   
@@ -273,13 +296,19 @@ smoothSticklebackTrackFile <-function (inFileName, firstFrame, lastFrame)
     prev_pos = curr_pos;      
     prev_fn = curr_fn;
   }
-  # make sure to get rid of the frames that are out of (firstFrame, lastFrame)
-  smoothedData = preAllocatedSmoothData[-which(is.na(preAllocatedSmoothData[,1]))];
   
+  
+  # make sure to get rid of the frames that are out of (firstFrame, lastFrame)
+  #print(dim(preAllocatedSmoothData));
+  smoothedData = preAllocatedSmoothData[-which(is.na(preAllocatedSmoothData[,1])),];
+  #print("dim smoothedData")
+  #print(dim(smoothedData))
   allFrameNums = smoothedData[,1];
   toRemoveIndeces = c(which(allFrameNums<firstFrame), which(allFrameNums>lastFrame));
+  #print("toRemoveIndeces")
+  #print(toRemoveIndeces)
   smoothedData = smoothedData[-toRemoveIndeces,];
   
   write.table(smoothedData,file = outFileName,sep = ",", row.names = FALSE, col.names = FALSE);
-  
+  print("finished")
 }
