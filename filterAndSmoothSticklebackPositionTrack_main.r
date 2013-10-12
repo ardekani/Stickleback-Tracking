@@ -28,7 +28,7 @@ listOfFailedFiles = c();
 Num = length(listOfFiles$filename);
 
 
-for (i in 4:Num)
+for (i in 118:Num)
 {
   print(sprintf(" %d out of %d",i,Num));
   rawInputFile = as.character(listOfFiles$filename[i]);
