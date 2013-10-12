@@ -307,7 +307,10 @@ smoothSticklebackTrackFile <-function (inFileName, firstFrame, lastFrame)
   toRemoveIndeces = c(which(allFrameNums<firstFrame), which(allFrameNums>lastFrame));
   #print("toRemoveIndeces")
   #print(toRemoveIndeces)
-  smoothedData = smoothedData[-toRemoveIndeces,];
+  if(length(toRemoveIndeces)>0)
+  {
+    smoothedData = smoothedData[-toRemoveIndeces,];
+  }
   
   write.table(smoothedData,file = outFileName,sep = ",", row.names = FALSE, col.names = FALSE);
   print("finished")
