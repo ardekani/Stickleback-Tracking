@@ -29,7 +29,7 @@ listOfAlreadyExistedFiles = c();
 Num = length(listOfFiles$filename);
 
 
-for (i in 1:Num)
+for (i in 2:Num)
 {
   print(sprintf(" %d out of %d",i,Num));
   rawInputFile = as.character(listOfFiles$filename[i]);
@@ -56,9 +56,12 @@ for (i in 1:Num)
   firstFrame = as.numeric(listOfFiles$startframe[i]);
   lastFrame = as.numeric(listOfFiles$stopframe[i]);
   
-  system.time(filterSticklebackTrackFile(rawInputFile));
-  
-  system.time(smoothSticklebackTrackFile(filteredInputFile,firstFrame,lastFrame));
+  if(!file.exists(filteredInputFile))
+  {
+    print("has to do the filtering")
+    system.time(filterSticklebackTrackFile(rawInputFile))
+  }
+  system.time(smoothSticklebackTrackFile(filteredInputFile,firstFrame,lastFrame))
 
 }
 
