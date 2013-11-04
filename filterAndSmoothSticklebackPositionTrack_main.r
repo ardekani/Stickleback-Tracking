@@ -70,5 +70,5 @@ listOfFailedFileName = paste(substr(inputListOfFiles,1,nchar(inputListOfFiles)-4
 write.csv(listOfFailedFiles, file = listOfFailedFileName)
 
 
-listOfAlreadyExistedFilesName = paste(substr(inputListOfFiles,1,nchar(inputListOfFiles)-4),"_failed.txt",sep="");
+listOfAlreadyExistedFilesName = paste(substr(inputListOfFiles,1,nchar(inputListOfFiles)-4),"_alreadyExisted.txt",sep="");
 write.csv(listOfAlreadyExistedFiles, file = listOfAlreadyExistedFilesName)

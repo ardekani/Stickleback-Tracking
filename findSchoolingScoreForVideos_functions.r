@@ -1,10 +1,15 @@
-checkThisVideo2 <- function(fileName, firstFrame=1, lastFrame=9000, threshForCloseness=125, threshForVel = 1.5)
+calculateSchoolingScoreForThisVideo <- function(fileName, firstFrame=1, lastFrame=9000, threshForCloseness=125, threshForVel = 1.5)
+#checkThisVideo2 <- function(fileName, firstFrame=1, lastFrame=9000, threshForCloseness=125, threshForVel = 1.5)
 {
+  
   # these are what have been used in the current version
-  threshForCloseness = 125;
-  threshForVel = 1.5; 
-  
-  
+  #threshForCloseness = 125;
+  #threshForVel = 1.5; 
+  if (firstFrame==0)
+  {
+    firstFrame = 1;
+    lastFrame = lastFrame+1;
+  }
   #firstFrame = 1;
   #lastFrame = 9000;
   #firstFrame = 1025;
@@ -38,8 +43,10 @@ checkThisVideo2 <- function(fileName, firstFrame=1, lastFrame=9000, threshForClo
   rawCenter = read.csv(centerFileName, header=FALSE);
   rawFish = read.csv(fishPosFileName, header=FALSE);
   
+  
+  
   rawCenter_frames = rawCenter[,1];
-  rawFish_frames   = rawFish[,1];
+  rawFish_frames   = rawFish[,1] - firstFrame; # it seems there is an error on the output of the videos, frame numbers are 1 ..n + 2*startframe!
   
   fishX       = rep(NA,lastFrame);
   fishY       = rep(NA,lastFrame);
@@ -47,8 +54,6 @@ checkThisVideo2 <- function(fileName, firstFrame=1, lastFrame=9000, threshForClo
   rawCenterY  = rep(NA,lastFrame);
   
   fishX[rawFish_frames] = rawFish[,4];
-  
-  
   fishY[rawFish_frames] = rawFish[,5];
   rawCenterX[rawCenter_frames]  = rawCenter[,2];
   rawCenterY[rawCenter_frames]  = rawCenter[,3];
