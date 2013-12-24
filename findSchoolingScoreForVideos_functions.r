@@ -1,26 +1,29 @@
-calculateSchoolingScoreForThisVideo <- function(fileName, firstFrame=1, lastFrame=9000, threshForCloseness=125, threshForVel = 1.5)
+calculateSchoolingScoreForThisVideo <- function(fileName, firstFrame=1, lastFrame=9000, threshForCloseness=125, threshForTimeOfCloseNessInEvery30 = 15)
 #checkThisVideo2 <- function(fileName, firstFrame=1, lastFrame=9000, threshForCloseness=125, threshForVel = 1.5)
 {
-  
   # these are what have been used in the current version
+
   #threshForCloseness = 125;
   #threshForVel = 1.5; 
+  
+  #firstFrame = 0;
+  #lastFrame = 9000;
+  #fileName = "C:\\stickleback\\tuningParameters\\videos\\F2.1_GR-clip-2011-10-25 12;32;47.avi"
+  
   if (firstFrame==0)
   {
     firstFrame = 1;
     lastFrame = lastFrame+1;
   }
-  #firstFrame = 1;
-  #lastFrame = 9000;
-  #firstFrame = 1025;
-  #lastFrame = 10025;
   
-  #fileName = "C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PJxP_Family1/school_only/1.1_GG-clip-2011-04-21 16;05;32.mp4"
+
+  
   centerFileName  = paste(substr(fileName,0,nchar(fileName)-4),"_centerOfCircle_smooth.txt",sep="");
   fishPosFileName = paste(substr(fileName,0,nchar(fileName)-4),"_allFramesInfoSorted_raw_filtered_smoothed.txt",sep="");
+  fishPosBeforeSmoothingFileName = paste(substr(fileName,0,nchar(fileName)-4),"_allFramesInfoSorted_raw_filtered.txt",sep="");
   outputFileName  = paste(substr(fileName,0,nchar(fileName)-4),"_schoolingScore_per_second.csv",sep="");
   
-  if(!file.exists(centerFileName) || !file.exists(fishPosFileName))
+  if(!file.exists(centerFileName) || !file.exists(fishPosFileName) || !file.exists(fishPosBeforeSmoothingFileName))
   {
     
     toRet = data.frame(videoName = as.character(fileName),schoolingScore = -1, confidence = -1 )
@@ -29,24 +32,45 @@ calculateSchoolingScoreForThisVideo <- function(fileName, firstFrame=1, lastFram
   }
   
   
-  #1.1_GG-clip-2011-04-21 16;05;32_allFramesInfoSorted_raw_filtered_smoothed.txt
-  #1.1_GG-clip-2011-04-21 16;05;32_centerOfCircle_smooth.txt
+  fishPosBeforeSmoothing = read.csv(fishPosBeforeSmoothingFileName, header=FALSE);
+  #print(dim(fishPosBeforeSmoothing)[1])
+  if(dim(fishPosBeforeSmoothing)[1]<4500) # if we do not detect the fish in at least half of the frames.. there is something wrong with that video, we don't score it
+  {
+    
+    toRet = data.frame(videoName = as.character(fileName),schoolingScore = -1, confidence = -1 )
+    return(toRet);
+    
+  }
   
+
+  rawCenter = read.csv(centerFileName, header=FALSE);
+  rawFish = read.csv(fishPosFileName, header=FALSE);
   
-  #centerFileName = paste("./",fileName,"/",fileName,"_centerOfCircle_smooth.txt",sep="");
-  #fishPosFileName = paste("./",fileName,"/",fileName,"_ws16_mp350_WithFeat_fromVideo_filtered.txt",sep="")
-  #outputFileName = paste("./",fileName,"/",fileName,"_ws16_mp350_WithFeat_fromVideo_filtered_TAGGED.csv",sep="")
-  #outputFileNameStartStops=paste("./",fileName,"/",fileName,"_ws16_mp350_WithFeat_fromVideo_filtered_StartStops.csv",sep="")
+  if(rawCenter[1,1]==0) #simply remove the first frame with 0 frame number!
+  {
+    
+    rawCenter = rawCenter[-1,];
+  }
+  
+  if(rawFish[1,1]==0) #simply remove the first frame with 0 frame number!
+  {
+    rawFish = rawFish[-1,];
+  }
+  
 
   
   
-  rawCenter = read.csv(centerFileName, header=FALSE);
-  rawFish = read.csv(fishPosFileName, header=FALSE);
   
   
   
   rawCenter_frames = rawCenter[,1];
-  rawFish_frames   = rawFish[,1] - firstFrame; # it seems there is an error on the output of the videos, frame numbers are 1 ..n + 2*startframe!
+
+  rawFish_frames   = rawFish[,1];
+  
+  if(firstFrame>1)# to avoid having -1 frame number for the videoes that first frame is 0 -- see the first 'if' on top of this function
+  {
+    rawFish_frames   = rawFish[,1] - firstFrame; # it seems there is an error on the output of the videos, frame numbers are 1 ..n + 2*startframe!
+  }
   
   fishX       = rep(NA,lastFrame);
   fishY       = rep(NA,lastFrame);
@@ -77,8 +101,13 @@ calculateSchoolingScoreForThisVideo <- function(fileName, firstFrame=1, lastFram
   isCloseMat = matrix(isClose,30,300)
   
   isCloseSec = colSums(isCloseMat)
-  isCloseSec[isCloseSec<15]  = 0;
-  isCloseSec[isCloseSec>=15] = 1;
+  
+  isCloseSec[isCloseSec<threshForTimeOfCloseNessInEvery30] = 0;
+  isCloseSec[isCloseSec>threshForTimeOfCloseNessInEvery30] = 1;
+  
+  
+  #isCloseSec[isCloseSec<15]  = 0;
+  #isCloseSec[isCloseSec>=15] = 1;
   
   # now we wanna say they should atleast be close 2 or more seconds
   isSchooling = matrix(isCloseSec,2,150); # do a trick, find the 

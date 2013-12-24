@@ -2,7 +2,16 @@
 
 
 rm(list=ls())
-source('/home/reza/Dropbox/stickleback_r_newScript/Stickleback-Tracking-R-Code/filterAndSmoothSticklebackPositionTrack_functions.r')
+#source('/home/reza/Dropbox/stickleback_r_newScript/Stickleback-Tracking-R-Code/filterAndSmoothSticklebackPositionTrack_functions.r')
+source('C:/Users/dehestan/Dropbox/stickleback_r_newScript/Stickleback-Tracking-R-Code/filterAndSmoothSticklebackPositionTrack_functions.r')
+
+
+rawInputFile ='C:/Users/dehestan/Desktop/checkTheSchoolingScores/4.1_GG-clip-2011-07-29 11;13;18_allFramesInfoSorted_raw.txt';
+filteredInputFile = paste(substr(rawInputFile,1,nchar(rawInputFile)-4),"_filtered.txt",sep="");
+smoothedInputfile = paste(substr(filteredInputFile,1,nchar(filteredInputFile)-4),"_smoothed.txt",sep="");
+
+smoothSticklebackTrackFile(filteredInputFile,0,9000)
+
 
 
 

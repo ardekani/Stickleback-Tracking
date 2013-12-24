@@ -3,10 +3,10 @@ setwd("C:/Users/dehestan/Dropbox/stickleback_r_newScript/Stickleback-Tracking-R-
 source ('findSchoolingScoreForVideos_functions.r');
 
 
-inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PJxPJ_F2_2011/videoinfo1of4_fullPath_schoolOnly_changedAddress_toCalculateSchoolingScore.csv';
-#inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PJxP_Family1/videoinfo4of4_fullPath_school_only_for_calculating_the_schooling.csv'
-#error inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PJxP_Family4/videoinfo3of4_fullPath_schooling_only_address_forCalculatingSchoolingScore.csv'
-#error inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PxPJ_Family2/videoinfo2of4_fullPath_school_only_forSchoolingScore.csv'
+#inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PJxPJ_F2_2011/videoinfo1of4_fullPath_schoolOnly_changedAddress_toCalculateSchoolingScore.csv';
+inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PJxP_Family1/videoinfo4of4_fullPath_school_only_for_calculating_the_schooling.csv'
+#inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PJxP_Family4/videoinfo3of4_fullPath_schooling_only_address_forCalculatingSchoolingScore.csv'
+#inputListOfFiles = 'C:/Users/dehestan/Dropbox/stickleback_r_newScript/data/PxPJ_Family2/videoinfo2of4_fullPath_school_only_forSchoolingScore.csv'
 
 #C:\Users\dehestan\Dropbox\stickleback_r_newScript\data\PxPJ_Family2\videoinfo2of4_fullPath_school_only_forSchoolingScore.csv
 
@@ -34,8 +34,8 @@ for (i in 1:Num)
   firstFrame = as.numeric(listOfFiles$startframe[i]);
   lastFrame = as.numeric(listOfFiles$stopframe[i]);
 
-
-  ret = calculateSchoolingScoreForThisVideo(rawInputFile, firstFrame, lastFrame)
+  # 135 and 15 are selected thresholds... they are good!
+  ret = calculateSchoolingScoreForThisVideo(rawInputFile, firstFrame, lastFrame,135,15)
   wholeResult = rbind(wholeResult,ret)
   
 }
@@ -43,8 +43,8 @@ for (i in 1:Num)
 
 wholeResult = data.frame(wholeResult);
 names(wholeResult) = c("videoName","schoolingScore","reliability");
-wholeResultOutputFileName = paste(substr(inputListOfFiles,0,nchar(inputListOfFiles)-4),"whole_results.csv")
+wholeResultOutputFileName = paste(substr(inputListOfFiles,0,nchar(inputListOfFiles)-4),"whole_results_new_135_15.csv")
 write.csv(wholeResult,file = wholeResultOutputFileName, row.names=FALSE, quote = FALSE);
 
-
+sum(wholeResult$schoolingScore == -1)
 

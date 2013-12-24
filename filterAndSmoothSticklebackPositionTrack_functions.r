@@ -227,7 +227,7 @@ smoothSticklebackTrackFile <-function (inFileName, firstFrame, lastFrame)
 {
   
   outFileName=paste(substr(inFileName,1,nchar(inFileName)-4),"_smoothed.txt",sep="");
-  
+  outFileNameNoOutliers=paste(substr(inFileName,1,nchar(inFileName)-4),"_noOutLiers.txt",sep="");
   nDim = 4;
   origTrackFile = read.csv(inFileName,header=FALSE)
   names(origTrackFile) = c("fn","NC","xdir","ydir","x","y","useless1","useless2");
@@ -245,6 +245,8 @@ smoothSticklebackTrackFile <-function (inFileName, firstFrame, lastFrame)
   }
   
   origTrackFile = origTrackFile[-which(isOutlier),]
+  # this is just to keep the file without any outliers... this should go to the filtering function not here!!
+  write.table(origTrackFile,file = outFileNameNoOutliers,sep = ",", row.names = FALSE, col.names = FALSE);
   
   #framesWithZeroComponents = which(origTrackFile$NC==0);
   #origTrackFile = origTrackFile[-framesWithZeroComponents,];
