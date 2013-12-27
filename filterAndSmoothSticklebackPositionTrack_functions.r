@@ -317,3 +317,95 @@ smoothSticklebackTrackFile <-function (inFileName, firstFrame, lastFrame)
   write.table(smoothedData,file = outFileName,sep = ",", row.names = FALSE, col.names = FALSE);
   print("finished")
 }
+
+#####################################################
+
+#######################################################
+
+
+filterSticklebackTrackFile2 <- function(inFileName, firstFrame, lastFrame,max_Accpetable=2)
+{
+  if (!file.exists(inFileName))
+  {
+    sprintf("%s does not exist!",inFileName)
+    return (FALSE)
+  }
+  
+  n_col = count.fields(inFileName,sep=",");
+  origTrackData = read.csv(inFileName,header=FALSE, fill = TRUE , col.names=1:max(n_col));
+  
+  #remove the lines with NA as "the number of detected components"
+  filteredTrackData = origTrackData[complete.cases(origTrackData[,2]),];
+  #remove frames with more than 2 measurement
+  filteredTrackData = filteredTrackData[(filteredTrackData[,2]<=max_Accpetable),];
+  #now we want to fix the frames that have two or more than two measurements, we want to pick the right one and then 
+  
+  
+  
+  for (j in 1:2) # go over the file twice - an arbitrary choice! TODO: it should repeat until there is no more fixing possible
+  {
+    
+    morethanOneDetectedIndex = which(filteredTrackData[,2]>1);
+    if(length(morethanOneDetectedIndex)>0)
+    {
+      for (i in 1:length(morethanOneDetectedIndex))
+      {
+        #ptm = proc.time();
+        index = morethanOneDetectedIndex[i];
+        fixedLine = fixThisLineWithMultipleMeasurements(filteredTrackData,index);
+        filteredTrackData[index,] = fixedLine;
+        #pttm = proc.time()-ptm;
+        #print(pttm);
+        #print(i)
+      }
+    }
+    
+    
+    
+    
+  }
+  
+  # now remove the frames that are not fixable (after two rounds)
+  
+  
+  filteredTrackData = filteredTrackData[(filteredTrackData[,2]==1),]; # keep only one measurement frames
+  #now only pick the first component
+  filteredTrackData = filteredTrackData[,1:8];
+  
+  
+  
+  
+  
+#  outFileName=paste(substr(inFileName,1,nchar(inFileName)-4),"_smoothed.txt",sep="");
+#  outFileNameNoOutliers=paste(substr(inFileName,1,nchar(inFileName)-4),"_noOutLiers.txt",sep="");
+#  nDim = 4;
+#  origTrackFile = read.csv(inFileName,header=FALSE)
+  
+  
+  origTrackFile = filteredTrackData;
+  names(origTrackFile) = c("fn","NC","xdir","ydir","x","y","useless1","useless2");
+  
+  #first remove the outliers
+  isOutlier = c();
+  print("finding outliers ....")
+  for( i in 1:max(dim(origTrackFile)))
+  {
+    tmp = isThisLineOutlier(origTrackFile,i);
+    #print("-----------------ii = ----------------")
+    #print(i)
+    #print("---------------------------------------")
+    isOutlier = c(isOutlier,tmp);  
+  }
+  
+  #origTrackFile = origTrackFile[-which(isOutlier),]
+  # this is just to keep the file without any outliers... this should go to the filtering function not here!!
+  #write.table(origTrackFile,file = outFileNameNoOutliers,sep = ",", row.names = FALSE, col.names = FALSE);
+      
+  filteredTrackData = origTrackFile[-which(isOutlier),]
+  
+  outFileName=paste(substr(inFileName,1,nchar(inFileName)-4),"_filtered_method1.txt",sep="");
+  write.table(filteredTrackData,file = outFileName,sep = ",", row.names = FALSE, col.names = FALSE);
+  
+}
+
+####################################
